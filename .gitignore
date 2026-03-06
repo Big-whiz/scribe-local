@@ -18,7 +18,7 @@ cert.pem
 key.pem
 
 # Models
-Model/
+
 
 # Temporary and output files
 temp_audio/
