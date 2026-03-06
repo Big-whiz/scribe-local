@@ -15,7 +15,7 @@ A powerful, premium-looking local transcription application powered by OpenAI's 
 
 1. Clone the repository:
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/Big-whiz/scribe-local.git
 cd transcriber_app
 ```
 
