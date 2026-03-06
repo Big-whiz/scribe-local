@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transcribe AI | Premium Transcription</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/wavesurfer.js@7/dist/wavesurfer.min.js"></script>
+    <script src="https://unpkg.com/wavesurfer.js@7/dist/plugins/regions.min.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <script>
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    </script>
+
+    <script src="/static/app.js" defer></script>
+</head>
+
+<body class="bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-200 min-h-screen flex font-['Inter']">
+
+    <!-- Mobile Sidebar Overlay -->
+    <div id="sidebarOverlay"
+        class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 hidden lg:hidden transition-opacity opacity-0"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar"
+        class="fixed inset-y-0 left-0 z-50 w-72 bg-white/80 dark:bg-slate-900/80 glass border-r border-slate-200 dark:border-slate-800 flex flex-col transform lg:translate-x-0 transition-transform duration-300 -translate-x-full">
+        <div class="p-6 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <h1 class="text-xl font-bold bg-gradient-to-r from-primary-600 to-indigo-600 bg-clip-text text-transparent">
+                Transcribe AI</h1>
+            <button id="closeSidebarBtn"
+                class="lg:hidden p-2 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                    </path>
+                </svg>
+            </button>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto p-4 space-y-1">
+            <button id="navNewBtn"
+                class="w-full flex items-center gap-3 px-4 py-2.5 bg-primary-600 text-white rounded-xl shadow-lg shadow-primary-500/20 hover:bg-primary-700 transition-all font-medium">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                New Session
+            </button>
+
+            <div class="pt-6 pb-2 px-4 text-xs font-bold text-slate-400 uppercase tracking-widest">Recent Activity</div>
+            <div id="historyList" class="space-y-1">
+                <!-- History Items Loaded via JS -->
+                <div class="px-4 py-8 text-center text-slate-400 text-sm">No recent activity</div>
+            </div>
+        </nav>
+
+        <div class="p-4 border-t border-slate-200 dark:border-slate-800">
+            <button id="themeToggleBtn"
+                class="w-full flex items-center justify-between px-4 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors">
+                <span class="text-sm font-medium">Appearance</span>
+                <div class="flex items-center gap-2">
+                    <svg id="theme-icon-light" class="w-4 h-4 hidden" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path
+                            d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z">
+                        </path>
+                    </svg>
+                    <svg id="theme-icon-dark" class="w-4 h-4 hidden" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z">
+                        </path>
+                    </svg>
+                </div>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto lg:ml-72 relative">
+        <!-- Header -->
+        <header
+            class="sticky top-0 z-40 bg-slate-50/80 dark:bg-slate-950/80 glass h-16 border-b border-slate-200 dark:border-slate-800 px-6 flex items-center justify-between">
+            <button id="openSidebarBtn" class="lg:hidden p-2 text-slate-500 hover:text-slate-700">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16">
+                    </path>
+                </svg>
+            </button>
+            <div class="flex items-center gap-4">
+                <span id="headerStatus" class="flex items-center gap-2 text-sm font-medium text-emerald-500">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    Whisper Ready
+                </span>
+            </div>
+        </header>
+
+        <div class="max-w-5xl mx-auto p-4 sm:p-6 lg:p-10 space-y-8">
+
+            <!-- Dashboard Home -->
+            <section id="newSessionSection" class="animate-fade-in">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+
+                    <!-- Left: Controls -->
+                    <div class="lg:col-span-2 space-y-6">
+                        <div
+                            class="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm shadow-slate-200/50">
+                            <h2 class="text-xl sm:text-2xl font-bold mb-6">Create New Transcription</h2>
+
+                            <form id="fileUploadForm" class="space-y-6">
+                                <div class="relative group">
+                                    <div
+                                        class="absolute inset-0 bg-primary-500/5 rounded-2xl group-hover:bg-primary-500/10 transition-colors pointer-events-none">
+                                    </div>
+                                    <div
+                                        class="p-6 sm:p-10 border-2 border-dashed border-slate-200 dark:border-slate-700 rounded-2xl flex flex-col items-center justify-center text-center transition-all group-hover:border-primary-400">
+                                        <svg class="w-12 h-12 text-slate-300 group-hover:text-primary-400 mb-4 transition-colors"
+                                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
+                                            </path>
+                                        </svg>
+                                        <p class="text-sm font-medium text-slate-600 dark:text-slate-400">Drag & drop
+                                            audio or Click to Browse</p>
+                                        <input type="file" id="audioFileInput" accept="audio/*"
+                                            class="absolute inset-0 opacity-0 cursor-pointer">
+                                    </div>
+                                    <div id="fileInfo" class="mt-4 flex items-center justify-between hidden px-2">
+                                        <span id="fileName"
+                                            class="text-sm font-semibold text-primary-600 truncate max-w-[200px]">filename.mp3</span>
+                                        <span id="totalDurationDisplay"
+                                            class="text-xs font-medium text-slate-400">00:00</span>
+                                    </div>
+                                </div>
+
+                                <div id="waveformUI" class="hidden animate-fade-in space-y-6">
+                                    <div id="waveform"
+                                        class="w-full h-32 bg-slate-100 dark:bg-slate-800/50 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800">
+                                    </div>
+
+                                    <div
+                                        class="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-slate-100 dark:border-slate-800">
+                                        <div class="flex gap-4">
+                                            <input type="text" id="startTimeInput"
+                                                class="w-20 px-3 py-1.5 text-center text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-primary-500"
+                                                placeholder="00:00">
+                                            <span class="text-slate-400 self-center">to</span>
+                                            <input type="text" id="endTimeInput"
+                                                class="w-20 px-3 py-1.5 text-center text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:ring-2 focus:ring-primary-500"
+                                                placeholder="00:00">
+                                        </div>
+                                        <div class="flex gap-2">
+                                            <button type="button" id="playFullBtn"
+                                                class="p-2 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors">
+                                                <svg id="playIcon" class="w-5 h-5" fill="currentColor"
+                                                    viewBox="0 0 20 20">
+                                                    <path
+                                                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A.5.5 0 009 7.5v5a.5.5 0 00.555.432l3.15-1.5a.5.5 0 000-.864l-3.15-1.5z" />
+                                                </svg>
+                                                <svg id="pauseIcon" class="w-5 h-5 hidden" fill="currentColor"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="col-span-1">
+                                        <label
+                                            class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Ref
+                                            Name</label>
+                                        <input type="text" id="customFilename"
+                                            class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary-500"
+                                            placeholder="e.g. Weekly Sync Transcript">
+                                    </div>
+                                    <div class="col-span-1">
+                                        <label
+                                            class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Language</label>
+                                        <select id="languageSelect"
+                                            class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary-500 appearance-none">
+                                            <option value="">Auto Detect</option>
+                                            <option value="en">English</option>
+                                            <option value="es">Spanish</option>
+                                            <option value="fr">French</option>
+                                            <option value="de">German</option>
+                                            <option value="it">Italian</option>
+                                            <option value="pt">Portuguese</option>
+                                            <option value="nl">Dutch</option>
+                                            <option value="ja">Japanese</option>
+                                            <option value="zh">Chinese</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-span-2">
+                                        <label
+                                            class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Context
+                                            / Keywords (Optional)</label>
+                                        <textarea id="initialPrompt" rows="2"
+                                            class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary-500 resize-none"
+                                            placeholder="e.g. Names, technical terms, or the general topic of the audio."></textarea>
+                                    </div>
+                                </div>
+
+                                <button type="submit" id="processBtn"
+                                    class="w-full py-4 bg-primary-600 text-white font-bold rounded-2xl shadow-xl shadow-primary-500/20 hover:bg-primary-700 hover:-translate-y-0.5 transition-all">
+                                    Begin AI Transcription
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Right: Quick Actions / Micro Interaction -->
+                    <div class="space-y-6">
+                        <div
+                            class="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
+                            <h3 class="font-bold mb-4">Direct Record</h3>
+                            <canvas id="liveWaveformCanvas"
+                                class="w-full h-16 bg-slate-50 dark:bg-slate-950 rounded-xl mb-6 hidden"></canvas>
+                            <div class="space-y-3">
+                                <input type="text" id="micTitle"
+                                    class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 mb-2"
+                                    placeholder="Recording Title (Optional)">
+                                <button id="startRecordBtn"
+                                    class="w-full py-3 bg-emerald-500 text-white font-semibold rounded-xl hover:bg-emerald-600 transition-colors">Record
+                                    Now</button>
+                                <button id="stopRecordBtn" disabled
+                                    class="w-full py-3 bg-red-500 text-white font-semibold rounded-xl opacity-0 hidden transition-all">Finish</button>
+                                <button id="retakeBtn" disabled
+                                    class="w-full py-3 bg-slate-200 dark:bg-slate-800 text-slate-500 rounded-xl opacity-0 hidden transition-all">Cancel</button>
+                            </div>
+                            <div id="micStatus" class="mt-4 text-center text-xs font-medium text-slate-400">Microphone
+                                idle</div>
+                        </div>
+
+                        <div
+                            class="bg-gradient-to-br from-primary-600 to-indigo-700 rounded-3xl p-8 text-white shadow-xl shadow-primary-500/20">
+                            <h3 class="font-bold mb-2">Powered by Whisper</h3>
+                            <p class="text-xs text-primary-100 leading-relaxed opacity-80">Using optimized local models
+                                for state-of-the-art accuracy without cloud latency or costs.</p>
+                            <br>Made with ❤️ by <a href="https://github.com/Big-whiz" target="_blank"
+                                class="text-primary-100 hover:text-white transition-colors">Wisdom.</a></br>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Active Jobs / Results -->
+            <section id="resultsSection" class="animate-fade-in hidden">
+                <div
+                    class="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-sm">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+                        <div>
+                            <h2 class="text-2xl font-bold mb-1">Transcription Result</h2>
+                            <p class="text-sm text-slate-400" id="resultSubtitle">Processing...</p>
+                        </div>
+                        <div id="exportControls" class="hidden flex flex-wrap gap-2 w-full sm:w-auto">
+                            <a id="downloadBtn" href="#" download
+                                class="flex-1 sm:flex-none text-center px-4 py-2.5 bg-primary-600 text-white text-sm font-bold rounded-xl hover:bg-primary-700 transition shadow-lg shadow-primary-500/10">TXT</a>
+                            <a id="downloadSrtBtn" href="#" download
+                                class="flex-1 sm:flex-none text-center px-4 py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-xl hover:bg-slate-300 dark:hover:bg-slate-700 transition">SRT</a>
+                            <a id="downloadJsonBtn" href="#" download
+                                class="flex-1 sm:flex-none text-center px-4 py-2.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-sm font-bold rounded-xl hover:bg-slate-300 dark:hover:bg-slate-700 transition">JSON</a>
+                        </div>
+                    </div>
+
+                    <div id="progressContainer" class="mb-10 hidden">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <span class="relative flex h-3 w-3">
+                                    <span
+                                        class="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-3 w-3 bg-primary-500"></span>
+                                </span>
+                                <span id="progressText"
+                                    class="text-sm font-bold uppercase tracking-widest text-primary-600">Initializing...</span>
+                            </div>
+                            <span id="progressPercent" class="text-sm font-bold text-slate-400">0%</span>
+                        </div>
+                        <div class="w-full bg-slate-100 dark:bg-slate-800 h-2.5 rounded-full overflow-hidden">
+                            <div id="progressBar" class="h-full bg-primary-600 transition-all duration-500 ease-out"
+                                style="width: 0%"></div>
+                        </div>
+                        <button id="cancelJobBtn"
+                            class="mt-6 text-xs font-bold text-red-500 uppercase tracking-widest hover:text-red-600 transition-colors">Cancel
+                            Session</button>
+                    </div>
+
+                    <div class="relative group">
+                        <div
+                            class="absolute -inset-2 bg-gradient-to-r from-primary-500 to-indigo-500 rounded-2xl opacity-0 group-hover:opacity-5 transition duration-500">
+                        </div>
+                        <div id="transcriptionOutput"
+                            class="relative min-h-[300px] p-6 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-100 dark:border-slate-900 font-mono text-sm leading-relaxed whitespace-pre-wrap overflow-y-auto max-h-[500px]">
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+</body>
+
+</html>

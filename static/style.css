@@ -1,0 +1,221 @@
+:root {
+    --primary: #6366f1;
+    --primary-hover: #4f46e5;
+    --bg-light: #f8fafc;
+    --bg-dark: #0f172a;
+    --card-light: rgba(255, 255, 255, 0.8);
+    --card-dark: rgba(30, 41, 59, 0.7);
+    --border-light: rgba(226, 232, 240, 0.8);
+    --border-dark: rgba(51, 65, 85, 0.5);
+}
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+.glass {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.card { transition: all 0.3s ease; }
+.card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08); }
+
+/* This rule is fine, it only sets layout */
+#transcriptionOutput {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.spinner {
+    border-top-color: #3b82f6;
+}
+
+/* Waveform Styles */
+canvas#liveWaveformCanvas {
+    background-color: transparent;
+    display: block;
+    border-radius: 0.5rem; /* rounded-lg */
+}
+
+/* --- Conflicting Rules Removed --- */
+/* I have removed the old #transcriptionOutput rules that set 
+background-color, border, padding, and border-radius,
+as Tailwind is now handling this in the HTML. 
+*/
+
+/* --- Custom File Input & Button Styles (Kept) --- */
+#uploadLabel {
+    cursor: pointer;
+}
+#uploadLabel:hover {
+    color: #2563eb;
+}
+#uploadInput {
+    display: none;
+}
+#transcribeButton {
+    background-color: #3b82f6;
+    color: white;
+}
+#transcribeButton:hover {
+    background-color: #2563eb;
+}
+#transcribeButton:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+}    
+#uploadInput {
+    display: none;
+}
+#uploadLabel {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #3b82f6;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+}
+#uploadLabel:hover {
+    background-color: #2563eb;
+}
+#uploadLabel:active {
+    background-color: #1e40af;
+}
+#uploadLabel span {
+    margin-left: 10px;
+}
+#uploadLabel span:hover {
+    text-decoration: underline;
+}
+#uploadLabel span:active {
+    text-decoration: none;
+}
+#fileName {
+    margin-left: 10px;
+    font-style: italic;
+    color: #6b7280;
+}
+#fileName:hover {
+    color: #374151;
+}
+#fileName:active {
+    color: #1f2937;
+}
+
+/* --- Theme-Aware Scrollbar --- */
+/* Light Mode Scrollbar */
+#transcriptionOutput::-webkit-scrollbar {
+    width: 8px;
+}
+#transcriptionOutput::-webkit-scrollbar-thumb {
+    background-color: #9ca3af; /* gray-400 */
+    border-radius: 4px;
+}
+#transcriptionOutput::-webkit-scrollbar-thumb:hover {
+    background-color: #6b7280; /* gray-500 */
+}
+#transcriptionOutput::-webkit-scrollbar-track {
+    background-color: #f3f4f6; /* gray-100 */
+}
+
+/* MODIFIED: Added Dark Mode Scrollbar */
+.dark #transcriptionOutput::-webkit-scrollbar-thumb {
+    background-color: #4b5563; /* gray-600 */
+}
+.dark #transcriptionOutput::-webkit-scrollbar-thumb:hover {
+    background-color: #6b7280; /* gray-500 */
+}
+.dark #transcriptionOutput::-webkit-scrollbar-track {
+    background-color: #1f2937; /* gray-800 */
+}
+
+/* --- Kept from original --- */
+#transcriptionOutput.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* New Retake Button Color */
+#retakeBtn.bg-yellow-500 {
+    background-color: #eab308; /* yellow-500 */
+}
+#retakeBtn.bg-yellow-500:hover {
+    background-color: #d97706; /* yellow-600 */
+}
+
+/* Add this to style.css */
+#progressBar {
+    transition: width 0.5s ease-in-out;
+}
+#progressBarContainer {
+    background-color: #e5e7eb; /* gray-200 */
+    border-radius: 0.375rem; /* rounded-md */
+    overflow: hidden;
+}
+#progressBar {
+    background-color: #3b82f6; /* blue-500 */
+    height: 1rem; /* h-4 */
+    width: 0%;
+}
+
+/* Sidebar Styling */
+#sidebar {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (max-width: 1024px) {
+    #sidebar.hidden-mobile {
+        transform: translateX(-100%);
+    }
+}
+
+.history-item {
+    transition: all 0.2s ease;
+}
+
+.history-item:hover {
+    background-color: rgba(99, 102, 241, 0.1);
+}
+
+/* Premium Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+}
+.dark ::-webkit-scrollbar-thumb {
+    background: #475569;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* Region Handles (The left/right drag bars) */
+.wavesurfer-region {
+    border-left: 2px solid var(--primary) !important;
+    border-right: 2px solid var(--primary) !important;
+}
+
+/* Optional: Add a label or specific cursor */
+.wavesurfer-region:hover {
+    cursor: grab;
+}
